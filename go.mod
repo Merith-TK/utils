@@ -1,3 +1,3 @@
-module git.merith.xyz/packages/go
+module git.merith.xyz/packages/utils
 
 go 1.18
