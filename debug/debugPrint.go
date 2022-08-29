@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	Enabled    bool   = false
-	DebugTitle string = "DEBUG"
+	Enabled bool   = false
+	Title   string = "DEBUG"
 )
 
 func init() {
@@ -22,6 +22,6 @@ func init() {
 
 func Print(message ...any) {
 	if Enabled {
-		log.Println(DebugTitle, message)
+		log.Println(Title, message)
 	}
 }
