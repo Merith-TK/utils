@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"git.merith.xyz/packages/utils/debug"
+	"github.com/Merith-TK/utils/debug"
 )
 
 func main() {
@@ -14,6 +14,5 @@ func main() {
 		flag.Usage()
 	}
 
-	// Test debug.Print()
-	debug.Print("Hello World")
+	debug.Print("Hello", "World")
 }

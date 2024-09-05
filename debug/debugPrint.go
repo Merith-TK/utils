@@ -3,6 +3,9 @@ package debug
 import (
 	"flag"
 	"log"
+	"os"
+
+	runDebug "runtime/debug"
 )
 
 var (
@@ -12,16 +15,15 @@ var (
 
 func init() {
 	// register debug flag
-	flag.BoolVar(&Enabled, "debug", false, "Enable Debug Mode")
+	flag.BoolVar(&Enabled, "debug", flag.Lookup("debug") != nil || os.Getenv("DEBUG") == "true", "Enable Debug Mode")
 }
 
 // Usage:
-//		utils.Debug.Enabled = true
-//		utils.Debug.Print("Hello World")
+//		debug.Enabled = true
+// 	    debug.Title = "HELLO"
+//		debug.Print("Hello World")
 // Output: DEBUG Hello World
 
 func Print(message ...any) {
-	if Enabled {
-		log.Println(Title, message)
-	}
+	log.Println("[DEBUG]", Title, message, "\n"+string(runDebug.Stack()))
 }
