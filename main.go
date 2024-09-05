@@ -13,6 +13,6 @@ func main() {
 	if !debug.Enabled {
 		flag.Usage()
 	}
-
+	debug.Title = "Testing"
 	debug.Print("Hello", "World")
 }

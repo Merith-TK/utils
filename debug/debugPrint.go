@@ -25,5 +25,7 @@ func init() {
 // Output: DEBUG Hello World
 
 func Print(message ...any) {
-	log.Println("[DEBUG]", Title, message, "\n"+string(runDebug.Stack()))
+	if Enabled {
+		log.Println("[DEBUG]", Title, message, "\n"+string(runDebug.Stack()))
+	}
 }
