@@ -8,11 +8,13 @@ import (
 
 func main() {
 	flag.Parse()
-
-	// this will be expanded as more and more tests are added
 	if !debug.Enabled {
 		flag.Usage()
 	}
-	debug.Title = "Testing"
+	debug.SetTitle("Testing")
 	debug.Print("Hello", "World")
+	debug.ResetTitle()
+	debug.Print("Hello", "World")
+
+	debug.PrintStacktrace("Hello", "Stacktrace")
 }
