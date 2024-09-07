@@ -8,13 +8,13 @@ import (
 
 func main() {
 	flag.Parse()
-	if !debug.Enabled && !debug.EnableStacktrace {
+	if !debug.GetDebug() && !debug.GetStacktrace() {
 		flag.Usage()
 	}
 	debug.SetTitle("Testing")
-	debug.Print("Hello", "World")
+	debug.Println("Hello", "World")
 	debug.ResetTitle()
-	debug.Print("Hello", "World")
+	debug.Println("Hello", "World")
 
-	debug.PrintStacktrace("Hello", "Stacktrace")
+	main2()
 }
