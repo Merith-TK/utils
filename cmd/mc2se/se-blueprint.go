@@ -29,7 +29,7 @@ var xmlHeader = `<?xml version="1.0"?>
 						</Orientation>
 					</PositionAndOrientation>
 					<LocalPositionAndOrientation xsi:nil="true" />
-					<GridSizeEnum>Large</GridSizeEnum>
+					<GridSizeEnum>{GRID}</GridSizeEnum>
 					<CubeBlocks>
 `
 var xmlFooter = `
@@ -67,6 +67,11 @@ var blockTemplate = `
 // blocktype, HSV color as three floats
 func writeBlock(blockType string, color []float64, pos []int, bpName string, skin string) string {
 	newBlock := blockTemplate
+
+	// TODO: There has to be a better way to do this?
+	if smallGrid && strings.HasPrefix(blockType, "Large") {
+		blockType = strings.Replace(blockType, "Large", "Small", 1)
+	}
 	newBlock = strings.Replace(newBlock, "{BLOCKTYPE}", blockType, 1)
 	newBlock = strings.Replace(newBlock, "{COLOR1}", strconv.FormatFloat(color[0], 'f', 6, 64), 1)
 	newBlock = strings.Replace(newBlock, "{COLOR2}", strconv.FormatFloat(color[1], 'f', 6, 64), 1)
@@ -80,5 +85,10 @@ func writeBlock(blockType string, color []float64, pos []int, bpName string, ski
 	xmlFooter = strings.Replace(xmlFooter, "{NAME}", bpName, -1)
 	xmlHeader = strings.Replace(xmlHeader, "{NAME}", bpName, -1)
 
+	if smallGrid {
+		xmlHeader = strings.Replace(xmlHeader, "{GRID}", "Small", -1)
+	} else {
+		xmlHeader = strings.Replace(xmlHeader, "{GRID}", "Large", -1)
+	}
 	return newBlock
 }

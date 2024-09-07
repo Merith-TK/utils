@@ -13,22 +13,20 @@ import (
 var inputFile string
 var outputFile string
 var definitionsFile string
+var smallGrid bool
 
 func init() {
 	flag.StringVar(&inputFile, "i", "", "input file name")
 	flag.StringVar(&outputFile, "o", "output.sbc", "output file name")
 	flag.StringVar(&definitionsFile, "d", "definitions.json", "custom definitions file")
+	flag.BoolVar(&smallGrid, "s", false, "use small grid blocks")
 	flag.Parse()
 }
 
 func main() {
 
 	if inputFile == "" {
-		if flag.Arg(0) != "" {
-			inputFile = flag.Arg(0)
-		} else {
-			log.Fatal("Input file not specified")
-		}
+		log.Fatal("Input file not specified")
 	}
 	file, err := os.Open(inputFile)
 	if err != nil {
@@ -42,11 +40,15 @@ func main() {
 		fmt.Println("Schematic loaded")
 	}
 
-	debug.Println("Project metadata:", project.MetaData)
-	debug.Println("Project version:", project.Version)
-	debug.Println("Project minecraft data version:", project.MinecraftDataVersion)
-	debug.Println("Project region name:", project.RegionName)
-
+	debug.Print("Project metadata:", project.MetaData)
+	debug.Print("Project version:", project.Version)
+	debug.Print("Project minecraft data version:", project.MinecraftDataVersion)
+	debug.Print("Project region name:", project.RegionName)
+	if smallGrid {
+		debug.Print("Using small grid blocks")
+	} else {
+		debug.Print("Using large grid blocks")
+	}
 	// Get the region size from the project.MetaData.EnclosingSize (vec3d)
 	xSize := project.MetaData.EnclosingSize.X
 	ySize := project.MetaData.EnclosingSize.Y
@@ -66,9 +68,11 @@ func main() {
 				}
 				log.Println("Converting block:", blockState.Name)
 				color, blockType, blockSkin := convertBlock(blockState)
-				fmt.Println("\t> ", blockType, color)
-				fmt.Println("\t> ", blockSkin)
-				fmt.Println("\t> ", x, y, z)
+				debug.SetTitle(blockState.Name)
+				debug.Print("> ", blockType, color)
+				debug.Print("> ", blockSkin)
+				debug.Print("> ", x, y, z)
+				debug.ResetTitle()
 
 				// todo: handle custom skins in conversion.go
 				blocklist += writeBlock(blockType, color, []int{x, y, z}, project.RegionName, blockSkin)

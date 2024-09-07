@@ -90,13 +90,13 @@ func loadDefaultDefinitions() {
 			var blockDef []blockDefinition
 			blockDef = append(blockDef, blockDefinition{Block: mcType + "_" + color, Color: colorHex, BlockType: validBlockTypes[mcType], BlockSkin: "Concrete_Armor"})
 			blockDefinitions = append(blockDefinitions, blockDef...)
-			debug.Println("Generated Default Block Definition:\n", blockDef)
+			debug.Print("Generated Default Block Definition:\n\t", blockDef)
 		}
 	}
 }
 
 func loadDefinitions() {
-	debug.Println("Loading definitions")
+	debug.Print("Loading definitions")
 	if _, err := os.Stat(definitionsFile); os.IsNotExist(err) {
 		// generate default definitions for stone and oak_planks
 		exampleDefinitions := []blockDefinition{
@@ -120,7 +120,7 @@ func loadDefinitions() {
 	if err != nil {
 		panic(err)
 	}
-	debug.Println("Loaded Custom Block Definitions:\n", blockDefinitions)
+	debug.Print("Loaded Custom Block Definitions:\n\t", blockDefinitions)
 
 	loadDefaultDefinitions()
 }
