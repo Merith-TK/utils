@@ -44,7 +44,7 @@ func Print(message ...any) {
 			log.Println("[DEBUG] {"+Title+"}", message)
 		}
 	}
-	if EnableStacktrace {
+	if Enabled && EnableStacktrace {
 		stack := runDebug.Stack()
 		lines := strings.Split(string(stack), "\n")
 		if len(lines) > 2 {
