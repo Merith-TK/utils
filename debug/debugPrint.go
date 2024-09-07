@@ -49,6 +49,12 @@ func Print(message ...any) {
 	if enableStacktrace && enableDebug {
 		stack := runDebug.Stack()
 		lines := strings.Split(string(stack), "\n")
-		fmt.Print(strings.Join(lines[7:], "\n"))
+		var newLines []string
+		for i := 0; i < len(lines); i++ {
+			if !strings.Contains(lines[i], "github.com/Merith-TK/utils/debug") && !strings.Contains(lines[i], "runtime/debug") {
+				newLines = append(newLines, lines[i])
+			}
+		}
+		fmt.Print(strings.Join(newLines, "\n"))
 	}
 }
