@@ -1,0 +1,14 @@
+[
+	// NOTICE: THIS IS NOT YET IMPLEMENTED
+	// This will be the future config file for the program,
+	// for now use the `definitions.json` file the program generates
+	// to manually edit the block definitions
+	
+	// rotation, 0 = north, 1 = east, 2 = south, 3 = west
+	{
+		"id": "minecraft:chest",
+		"rotation": 0,
+		"color": "red", // HEX or minecraft color name
+		"texture" : "" // block skin, leave empty for default
+	}
+]

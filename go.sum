@@ -1,4 +1,10 @@
 github.com/BurntSushi/toml v1.4.0 h1:kuoIxZQy2WRRk1pttg9asf+WVv6tWQuBNVmK8+nqPr0=
 github.com/BurntSushi/toml v1.4.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
+github.com/Tnze/go-mc v1.20.1-pre1 h1:qSfya7XUnrp2zW8dHJSybs3R7mtLrvp+6Zm+ourb9Ww=
+github.com/Tnze/go-mc v1.20.1-pre1/go.mod h1:c1znJQglgqa1Jjs3Dr29woN/msguiJrlNtWXhKedh2U=
+github.com/elvis972602/go-litematica-tools v0.0.0-20231113082124-dea517c3f138 h1:ffdUh6dj1jAUrBH0U5PrUv9+0XSHMXeidX0kSFk4+I4=
+github.com/elvis972602/go-litematica-tools v0.0.0-20231113082124-dea517c3f138/go.mod h1:7No45ubyNXb0mml0YnIw7D1V69d0Bia3pz2eg5iIl30=
 github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=
 github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/lucasb-eyer/go-colorful v1.2.0 h1:1nnpGOrhyZZuNyfu1QjKiUICQ74+3FNCN69Aj6K7nkY=
+github.com/lucasb-eyer/go-colorful v1.2.0/go.mod h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=
