@@ -1,8 +1,6 @@
 package main
 
 import (
-	"math/big"
-
 	"github.com/Merith-TK/utils/debug"
 )
 
@@ -30,21 +28,32 @@ func init() {
 }
 
 func VariantBase64Encode(input []byte) []byte {
-	debug.SetTitle("VariantBase64Encode")
-	debug.Print("Input:", string(input))
 	var result []byte
-	base := big.NewInt(65)              // Base 65
-	num := new(big.Int).SetBytes(input) // Convert input to a big integer
+	blocksCount := len(input) / 3
+	leftBytes := len(input) % 3
 
-	// Perform the base-65 encoding
-	for num.Cmp(big.NewInt(0)) > 0 {
-		remainder := new(big.Int)
-		num.DivMod(num, base, remainder) // num = num / 65, remainder = num % 65
-		result = append([]byte{VariantBase64Table[remainder.Int64()]}, result...)
+	for i := 0; i < blocksCount; i++ {
+		// Convert 3 bytes to an integer (24 bits)
+		codingInt := int(input[3*i]) | int(input[3*i+1])<<8 | int(input[3*i+2])<<16
+		// Break the 24-bit integer into four 6-bit values and map them using VariantBase64Table
+		result = append(result, VariantBase64Table[codingInt&0x3f])
+		result = append(result, VariantBase64Table[(codingInt>>6)&0x3f])
+		result = append(result, VariantBase64Table[(codingInt>>12)&0x3f])
+		result = append(result, VariantBase64Table[(codingInt>>18)&0x3f])
 	}
 
-	debug.ResetTitle()
-	debug.SetStacktrace(false)
+	// Handle leftover bytes (padding)
+	if leftBytes == 1 {
+		codingInt := int(input[3*blocksCount])
+		result = append(result, VariantBase64Table[codingInt&0x3f])
+		result = append(result, VariantBase64Table[(codingInt>>6)&0x3f])
+	} else if leftBytes == 2 {
+		codingInt := int(input[3*blocksCount]) | int(input[3*blocksCount+1])<<8
+		result = append(result, VariantBase64Table[codingInt&0x3f])
+		result = append(result, VariantBase64Table[(codingInt>>6)&0x3f])
+		result = append(result, VariantBase64Table[(codingInt>>12)&0x3f])
+	}
+
 	return result
 }
 

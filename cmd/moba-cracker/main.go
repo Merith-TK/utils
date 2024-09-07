@@ -1,13 +1,16 @@
 package main
 
 import (
+	"archive/zip"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Merith-TK/utils/debug"
 )
@@ -44,8 +47,8 @@ func main() {
 			MajorVersionInt,
 			MinorVersionInt)
 		fmt.Println("[*] Success!")
-		fmt.Println("[*] File generated:", filepath.Join("Custom.mxtpro"))
-		fmt.Println("[*] Please move or copy the newly-generated file to MobaXterm's installation path.")
+		fmt.Println("[*] File generated:", filepath.Join("Pro.key"))
+		fmt.Println("[*] Please manually compress Pro.key to a zipfile and rename it to Custom.mxtpro")
 		fmt.Println()
 	}
 }
@@ -59,11 +62,32 @@ func GenerateLicense(Type int, Count int, UserName string, MajorVersion int, Min
 	LicenseString := fmt.Sprintf("%d#%s|%d%d#%d#%d3%d6%d#%d#%d#%d#", Type, UserName, MajorVersion, MinorVersion, Count, MajorVersion, MinorVersion, MinorVersion, 0, 0, 0)
 	EncryptedLicenseString := EncryptBytes(0x787, []byte(LicenseString))
 	EncodedLicenseString := VariantBase64Encode(EncryptedLicenseString)
-	debug.Print("License String:", string(EncodedLicenseString))
 
-	zip()
-}
+	// write Pro.key to zip file without compression
+	ZipFile, err := os.Create("Golang.mxtpro")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-func zip() {
-	debug.Print("Zipping")
+	ZipWriter := zip.NewWriter(ZipFile)
+	defer ZipWriter.Close()
+
+	header := &zip.FileHeader{
+		Name:          "Pro.key",
+		Method:        zip.Store, // Use Store (no compression)
+		Modified:      time.Time{},
+		ExternalAttrs: 0x1800000,
+		// TODO: Strip characteristics
+	}
+
+	zipFileWriter, err := ZipWriter.CreateHeader(header)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Write the encoded license string to the file
+	_, err = io.Copy(zipFileWriter, strings.NewReader(string(EncodedLicenseString)))
+	if err != nil {
+		log.Fatal(err)
+	}
+
 }
