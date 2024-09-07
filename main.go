@@ -8,7 +8,7 @@ import (
 
 func main() {
 	flag.Parse()
-	if !debug.Enabled {
+	if !debug.Enabled && !debug.EnableStacktrace {
 		flag.Usage()
 	}
 	debug.SetTitle("Testing")
