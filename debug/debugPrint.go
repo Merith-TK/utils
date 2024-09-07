@@ -1,3 +1,4 @@
+// Package debug provides utilities for debugging purposes.
 package debug
 
 import (
@@ -12,55 +13,42 @@ import (
 const defaultTitle = ""
 
 var (
-	Enabled          bool   = false
-	EnableStacktrace bool   = false
+	enableDebug      bool   = false
+	enableStacktrace bool   = false
 	Title            string = defaultTitle
 )
 
 func init() {
 	// register debug flag
-	flag.BoolVar(&Enabled, "debug", flag.Lookup("debug") != nil || os.Getenv("DEBUG") == "true", "Enable Debug Mode")
-	flag.BoolVar(&EnableStacktrace, "stacktrace", flag.Lookup("stacktrace") != nil || os.Getenv("STACKTRACE") == "true", "Enable Stacktrace")
+	if flag.Lookup("debug") == nil {
+		flag.BoolVar(&enableDebug, "debug", flag.Lookup("debug") != nil || os.Getenv("DEBUG") == "true", "Enable Debug Mode")
+	}
+	if flag.Lookup("stacktrace") == nil {
+		flag.BoolVar(&enableStacktrace, "stacktrace", flag.Lookup("stacktrace") != nil || os.Getenv("STACKTRACE") == "true", "Enable Stacktrace")
+	}
 }
 
-// Usage:
-//		debug.Enabled = true
-// 	    debug.Title = "HELLO"
-//		debug.Print("Hello World")
-// Output: DEBUG Hello World
-
-func SetTitle(title string) {
-	Title = title
-}
-func ResetTitle() {
-	Title = defaultTitle
+// Println prints the given message to the standard output, followed by a newline character.
+// It is used for debugging purposes.
+// Note: Println should not be necessary, but it is included in case it is needed.
+func Println(message ...any) {
+	Print(message)
+	fmt.Print("\n")
 }
 
+// Print prints the given message to the standard output.
+// It is used for debugging purposes.
 func Print(message ...any) {
-	if Enabled {
+	if enableDebug {
 		if Title == defaultTitle {
-			log.Println("[DEBUG]", message)
+			log.Print("[DEBUG]", message)
 		} else {
-			log.Println("[DEBUG] {"+Title+"}", message)
+			log.Print("[DEBUG] {"+Title+"}", message)
 		}
 	}
-	if Enabled && EnableStacktrace {
+	if enableStacktrace && enableDebug {
 		stack := runDebug.Stack()
 		lines := strings.Split(string(stack), "\n")
-		if len(lines) > 2 {
-			line := lines[6]
-			line = strings.TrimSpace(line)
-			path := strings.Split(line, " ")[0]
-			if !strings.Contains(path, "github.com/Merith-TK/utils/debug/debugPrint.go") {
-				fmt.Println("\t", path)
-			}
-		}
+		fmt.Print(strings.Join(lines[7:], "\n"))
 	}
-}
-
-func PrintStacktrace(message ...any) {
-	Print(message)
-	stack := runDebug.Stack()
-	lines := strings.Split(string(stack), "\n")
-	fmt.Println(strings.Join(lines[5:], "\n"))
 }
