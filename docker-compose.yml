@@ -1,0 +1,9 @@
+services:
+  downtime-server:
+    image: cosmtrek/air
+    working_dir: /utils
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./utils:/utils
+    command: ["-c", "./cmd/downtime-server/.air.toml"]

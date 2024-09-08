@@ -24,7 +24,7 @@ var (
 func main() {
 	flag.Parse()
 	startTime = time.Now()
-	debug.Print("Server started at:", startTime)
+	log.Println("Downtime Server started")
 
 	// Define two different WebSocket endpoints
 	http.HandleFunc("/", handleWebSocket)          // For ping/pong and misc commands
