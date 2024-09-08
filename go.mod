@@ -7,8 +7,16 @@ replace git.merith.xyz/packages/utils => ./
 require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/elvis972602/go-litematica-tools v0.0.0-20231113082124-dea517c3f138
+	github.com/gen2brain/beeep v0.0.0-20240516210008-9c006672e7f4
 	github.com/gorilla/websocket v1.5.3
 	github.com/lucasb-eyer/go-colorful v1.2.0
 )
 
-require github.com/Tnze/go-mc v1.20.1-pre1 // indirect
+require (
+	github.com/Tnze/go-mc v1.20.1-pre1 // indirect
+	github.com/go-toast/toast v0.0.0-20190211030409-01e6764cf0a4 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
+	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
+	github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af // indirect
+	golang.org/x/sys v0.25.0 // indirect
+)

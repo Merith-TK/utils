@@ -1,0 +1,13 @@
+{
+    "notify": {
+        "notification": {
+            "enabled": true
+        },
+        "beep": {
+            "enabled": true
+        }
+    },
+    "servers": [
+        "http://localhost:8080"
+    ]
+}
