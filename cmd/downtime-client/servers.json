@@ -8,6 +8,7 @@
         }
     },
     "servers": [
-        "http://localhost:8080"
+        "http://localhost:8080",
+        "http://merith.xyz:8080"
     ]
 }

@@ -1,6 +1,7 @@
 services:
   downtime-server:
     image: cosmtrek/air
+    container_name: downtime-server
     restart: always
     working_dir: /utils
     ports:
