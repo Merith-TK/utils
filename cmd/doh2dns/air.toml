@@ -3,7 +3,7 @@ testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
-  args_bin = ["-debug"]
+  args_bin = ["-debug -host localhost"]
   bin = "tmp/doh2dns.exe"
   cmd = "go build -buildvcs=false -o ./tmp/doh2dns.exe ./cmd/doh2dns"
   delay = 1000
@@ -21,7 +21,7 @@ tmp_dir = "tmp"
   poll = false
   poll_interval = 0
   post_cmd = []
-  pre_cmd = []
+  pre_cmd = ["rm ./tmp/doh2dns.exe"]
   rerun = false
   rerun_delay = 500
   send_interrupt = false
