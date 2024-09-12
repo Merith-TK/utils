@@ -89,7 +89,7 @@ func main() {
 		log.Println(srv.ListenAndServe())
 	}()
 	// request the random string from the server
-	resp, err := http.Get(hostAddress + ":8080")
+	resp, err := http.Get(hostAddress + "/")
 	if err != nil {
 		srv.Shutdown(ctx)
 		log.Fatal("Failed to get random string:", err)
