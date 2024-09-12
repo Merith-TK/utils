@@ -9,3 +9,11 @@ services:
     volumes:
       - ./:/utils
     command: ["-c", "/utils/cmd/downtime-server/air.toml"]
+
+  doh2dns:
+    image: cosmtrek/doh2dns
+    container_name: doh2dns
+    restart: always
+    ports:
+      - "8080:8080/tcp"
+    command: ["-c", "/utils/cmd/doh2dns/air.toml"]
