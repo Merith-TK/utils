@@ -3,7 +3,7 @@ testdata_dir = "testdata"
 tmp_dir = "tmp"
 
 [build]
-  args_bin = []
+  args_bin = ["-debug"]
   bin = "tmp/doh2dns.exe"
   cmd = "go build -buildvcs=false -o ./tmp/doh2dns.exe ./cmd/doh2dns"
   delay = 1000

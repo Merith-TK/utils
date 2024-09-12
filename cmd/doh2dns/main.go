@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"flag"
 	"log"
 	"net"
 	"net/http"
+	"time"
+
+	"github.com/Merith-TK/utils/debug"
 )
 
 // Structs for DoH response
@@ -31,8 +36,17 @@ type DoHResponse struct {
 	Answer   []DNSAnswer   `json:"Answer"`
 }
 
+var dnsServer string // Global variable to hold the DNS server address
+
 func main() {
+	// Define a command-line flag for the DNS server
+	flag.StringVar(&dnsServer, "dns", "", "DNS server address (e.g. 8.8.8.8:53). Leave empty to use the system resolver.")
+	flag.Parse()
+
+	debug.Print("Starting DoH to DNS server...")
+
 	http.HandleFunc("/dns-query", handleDNSRequest)
+	log.Println("Starting server on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
@@ -68,7 +82,17 @@ func handleDNSRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Perform DNS lookup
-	ips, err := net.LookupHost(domain)
+	var ips []string
+	var err error
+
+	if dnsServer == "" {
+		debug.Print("Using system DNS resolver")
+		ips, err = net.LookupHost(domain)
+	} else {
+		debug.Print("Using custom DNS server: ", dnsServer)
+		ips, err = resolveWithCustomDNS(domain, dnsServer)
+	}
+
 	if err != nil {
 		http.Error(w, "DNS lookup failed: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -92,7 +116,7 @@ func handleDNSRequest(w http.ResponseWriter, r *http.Request) {
 		answer := DNSAnswer{
 			Name: domain,
 			Type: queryType,
-			TTL:  300, // Static TTL value; you can make this dynamic if needed
+			TTL:  300, // Static TTL value; can make dynamic if needed
 			Data: ip,
 		}
 		dohResp.Answer = append(dohResp.Answer, answer)
@@ -104,6 +128,28 @@ func handleDNSRequest(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(dohResp); err != nil {
 		http.Error(w, "Failed to encode response: "+err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// resolveWithCustomDNS resolves a domain using a specified DNS server
+func resolveWithCustomDNS(domain, dnsServer string) ([]string, error) {
+	// Create a custom DNS resolver with the specified DNS server
+	client := &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+			dialer := &net.Dialer{
+				Timeout: 5 * time.Second,
+			}
+			return dialer.DialContext(ctx, "udp", dnsServer)
+		},
+	}
+
+	// Perform DNS lookup
+	ips, err := client.LookupHost(context.Background(), domain)
+	if err != nil {
+		return nil, err
+	}
+
+	return ips, nil
 }
 
 // getType translates a query type (e.g., "A", "AAAA") to its DNS code
