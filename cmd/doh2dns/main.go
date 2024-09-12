@@ -53,15 +53,19 @@ func main() {
 	flag.StringVar(&dnsServer, "dns", "1.1.1.1", "DNS server address (e.g. 1.1.1.1:53). Leave empty to use the system resolver.")
 	flag.Parse()
 
-	if debug.GetDebug() {
-		startDoHServer()
-		return
-	}
-	hostAddress = strings.TrimPrefix(hostAddress, "http://")
-	hostAddress = strings.Join([]string{"https://", hostAddress}, "")
-
 	if !strings.Contains(dnsServer, ":") {
 		dnsServer = strings.Join([]string{dnsServer, "53"}, ":")
+	}
+
+	// If the host address is not provided, exit
+	if hostAddress == "" {
+		log.Fatal("Host address not provided")
+	}
+	if !debug.GetDebug() {
+		hostAddress = strings.Replace(hostAddress, "http://", "https://", 1)
+	}
+	if !strings.HasPrefix(hostAddress, "https://") && !strings.HasPrefix(hostAddress, "http://") {
+		hostAddress = "https://" + hostAddress
 	}
 
 	log.Println("Host address:", hostAddress)
@@ -85,7 +89,7 @@ func main() {
 		log.Println(srv.ListenAndServe())
 	}()
 	// request the random string from the server
-	resp, err := http.Get("https://" + hostAddress + ":8080")
+	resp, err := http.Get(hostAddress + ":8080")
 	if err != nil {
 		srv.Shutdown(ctx)
 		log.Fatal("Failed to get random string:", err)
@@ -199,11 +203,22 @@ func handleDNSRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, ans := range in.Answer {
+		cleanName := strings.TrimSuffix(ans.Header().Name, ".")
+		var cleanData string
+		cleanData = ans.String()
+		debug.Print("Clean Data: All I am doing is trimming data that is already present in the response\n\t", "to bring it inline to what I see when I do a doh query to cloudflares dns server")
+		debug.Print("Clean Data  [orignal]:", cleanData)
+		cleanData = strings.TrimPrefix(cleanData, cleanName+".\t")
+		cleanData = strings.TrimPrefix(cleanData, strconv.Itoa(int(ans.Header().Ttl))+"\t")
+		cleanData = strings.TrimPrefix(cleanData, dns.ClassToString[ans.Header().Class]+"\t")
+		cleanData = strings.TrimPrefix(cleanData, dns.TypeToString[ans.Header().Rrtype]+"\t")
+		debug.Print("Clean Data  [trimmed]:", cleanData)
+
 		dnsAnswer := DNSAnswer{
-			Name: strings.TrimSuffix(ans.Header().Name, "."),
+			Name: cleanName,
 			Type: int(ans.Header().Rrtype),
 			TTL:  int(ans.Header().Ttl),
-			Data: ans.String(),
+			Data: cleanData,
 		}
 		dohResp.Answer = append(dohResp.Answer, dnsAnswer)
 	}
