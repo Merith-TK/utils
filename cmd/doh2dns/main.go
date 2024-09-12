@@ -16,12 +16,11 @@ import (
 	"time"
 
 	"github.com/Merith-TK/utils/debug"
+	"github.com/gorilla/mux"
 	"github.com/miekg/dns"
 )
 
 // DOC: https://developers.google.com/speed/public-dns/docs/doh/json
-
-// Structs for DoH response
 type DNSQuestion struct {
 	Name string `json:"name"`
 	Type int    `json:"type"`
@@ -47,8 +46,8 @@ type DoHResponse struct {
 
 var dnsServer string   // Global variable to hold the DNS server address
 var hostAddress string // Global variable to hold the host address
+
 func main() {
-	// Define a command-line flag for the DNS server
 	flag.StringVar(&hostAddress, "host", "", "The hosted address for this DNS server")
 	flag.StringVar(&dnsServer, "dns", "1.1.1.1", "DNS server address (e.g. 1.1.1.1:53). Leave empty to use the system resolver.")
 	flag.Parse()
@@ -57,7 +56,6 @@ func main() {
 		dnsServer = strings.Join([]string{dnsServer, "53"}, ":")
 	}
 
-	// If the host address is not provided, exit
 	if hostAddress == "" {
 		log.Fatal("Host address not provided")
 	}
@@ -74,22 +72,26 @@ func main() {
 		log.Fatal("Failed to generate random string:", err)
 	}
 
-	srv := &http.Server{Addr: ":8080"}
-	srv.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	r := mux.NewRouter()
+	r.HandleFunc("/dns-query", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write([]byte(randStr))
-	})
+	}).Methods("GET")
+
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// start server and wait to kill it
 	go func() {
 		log.Println("Starting Verification server on :8080")
 		log.Println(srv.ListenAndServe())
 	}()
-	// request the random string from the server
-	resp, err := http.Get(hostAddress + "/")
+
+	resp, err := http.Get(hostAddress + "/dns-query")
 	if err != nil {
 		srv.Shutdown(ctx)
 		log.Fatal("Failed to get random string:", err)
@@ -115,45 +117,38 @@ func main() {
 
 		startDoHServer()
 	}
-
 }
 
 func startDoHServer() {
 	fmt.Println("Starting DoH to DNS server...")
-	http.HandleFunc("/dns-query", handleDNSRequest)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	r := mux.NewRouter()
+	r.HandleFunc("/dns-query", handleDNSRequest).Methods("GET")
+
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
+
 func handleDNSRequest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
 		return
 	}
 
-	if r.URL.Path != "/dns-query" {
-		http.Error(w, "Invalid path", http.StatusNotFound)
-		return
-	}
-
-	// Parse query parameters
 	q := r.URL.Query()
 	domain := q.Get("name")
 	qtype := q.Get("type")
 	qtype = strings.ToUpper(qtype)
 	var qtypeInt16 uint16
 
-	// If no type provided, set default to A (IPv4 address)
 	if qtype == "" {
 		qtypeInt16 = dns.TypeA
 	} else {
-		// Try converting string to int
 		if parsedInt, err := strconv.Atoi(qtype); err == nil {
-			qtypeInt16 = uint16(parsedInt) // Successfully parsed an integer
+			qtypeInt16 = uint16(parsedInt)
 		} else if val, found := dns.StringToType[qtype]; found {
-			// Check if the string matches a known DNS type
 			qtypeInt16 = val
 		} else {
-			// Default fallback if the input is unrecognized
-			qtypeInt16 = dns.TypeNone // or handle this as an error, if needed
+			qtypeInt16 = dns.TypeNone
 		}
 	}
 
@@ -163,12 +158,10 @@ func handleDNSRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !strings.HasSuffix(domain, ".") {
-		domain += "." // Ensure domain ends with a dot
+		domain += "."
 	}
 
-	// make a DNS request to get the ip of example.com, and get as much information as possible
 	dnsClient := new(dns.Client)
-
 	dnsClient.Dialer = &net.Dialer{
 		Timeout: 200 * time.Millisecond,
 	}
@@ -180,7 +173,6 @@ func handleDNSRequest(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("Failed to exchange: %v", err)
 	}
 
-	// Convert DNS response to DoH response
 	dohResp := DoHResponse{
 		Status:   in.Rcode,
 		Tc:       in.Truncated,
@@ -194,7 +186,6 @@ func handleDNSRequest(w http.ResponseWriter, r *http.Request) {
 
 	for _, q := range in.Question {
 		q.Name = strings.TrimSuffix(q.Name, ".")
-
 		dnsQuestion := DNSQuestion{
 			Name: q.Name,
 			Type: int(q.Qtype),
@@ -204,15 +195,11 @@ func handleDNSRequest(w http.ResponseWriter, r *http.Request) {
 
 	for _, ans := range in.Answer {
 		cleanName := strings.TrimSuffix(ans.Header().Name, ".")
-		var cleanData string
-		cleanData = ans.String()
-		debug.Print("Clean Data: All I am doing is trimming data that is already present in the response\n\t", "to bring it inline to what I see when I do a doh query to cloudflares dns server")
-		debug.Print("Clean Data  [orignal]:", cleanData)
+		cleanData := ans.String()
 		cleanData = strings.TrimPrefix(cleanData, cleanName+".\t")
 		cleanData = strings.TrimPrefix(cleanData, strconv.Itoa(int(ans.Header().Ttl))+"\t")
 		cleanData = strings.TrimPrefix(cleanData, dns.ClassToString[ans.Header().Class]+"\t")
 		cleanData = strings.TrimPrefix(cleanData, dns.TypeToString[ans.Header().Rrtype]+"\t")
-		debug.Print("Clean Data  [trimmed]:", cleanData)
 
 		dnsAnswer := DNSAnswer{
 			Name: cleanName,
@@ -225,7 +212,6 @@ func handleDNSRequest(w http.ResponseWriter, r *http.Request) {
 
 	debug.Print("DoH Response:", dohResp)
 
-	// Respond with the DNS response as JSON
 	w.Header().Set("Content-Type", "application/dns-json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(dohResp); err != nil {
