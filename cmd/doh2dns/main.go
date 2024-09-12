@@ -12,6 +12,8 @@ import (
 	"github.com/Merith-TK/utils/debug"
 )
 
+// DOC: https://developers.google.com/speed/public-dns/docs/doh/json
+
 // Structs for DoH response
 type DNSQuestion struct {
 	Name string `json:"name"`
@@ -83,19 +85,13 @@ func handleDNSRequest(w http.ResponseWriter, r *http.Request) {
 
 	// Perform DNS lookup
 	var ips []string
-	var err error
 
 	if dnsServer == "" {
 		debug.Print("Using system DNS resolver")
-		ips, err = net.LookupHost(domain)
+		ips, _ = net.LookupHost(domain)
 	} else {
 		debug.Print("Using custom DNS server: ", dnsServer)
-		ips, err = resolveWithCustomDNS(domain, dnsServer)
-	}
-
-	if err != nil {
-		http.Error(w, "DNS lookup failed: "+err.Error(), http.StatusInternalServerError)
-		return
+		ips, _ = resolveWithCustomDNS(domain, dnsServer)
 	}
 
 	// Construct DoH response

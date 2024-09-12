@@ -2,10 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
-	"os"
-	"os/exec"
 )
 
 func main() {
@@ -16,22 +13,12 @@ func main() {
 	}
 
 	command := args[0]
-	if commandBase, ok := commandList[command]; ok {
-		execCmd(commandBase, args[1:]...)
-	} else {
-		log.Fatalf("Command '%s' not found", command)
+	if _, ok := commandList[command]; !ok {
+		commandHandler(command, args...)
+		return
 	}
 
-	fmt.Println("Command executed successfully")
-}
+	execCommand("docker", "compose", args...)
 
-func execCmd(command string, args ...string) {
-	cmd := exec.Command(command, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmd.Run()
-	if err != nil {
-		log.Fatalf("Failed to run command: %s", err)
-	}
+	// Rest of your code goes here
 }

@@ -8,4 +8,5 @@ var commandList = map[string]string{
 	"ps":    "docker compose ps",
 	"logs":  "docker compose logs",
 }
-var commandBase = "docker compose"
+
+var commandBase = []string{"docker", "compose"}

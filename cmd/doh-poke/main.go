@@ -34,7 +34,7 @@ type DoHResponse struct {
 
 func main() {
 	flag.Parse()
-
+	debug.Print("Starting DoH poke...")
 	// Parse command line arguments
 	dohServer := flag.Arg(0)
 	domain := flag.Arg(1)
@@ -97,6 +97,8 @@ func main() {
 		log.Println("Failed to parse JSON response:", err)
 		log.Println("Response body:", string(body))
 	}
+
+	debug.Print("Value:", string(body))
 
 	// Print the answer
 	for _, answer := range dohResponse.Answer {
