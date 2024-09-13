@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net"
 	"net/http"
@@ -96,7 +96,7 @@ func main() {
 		srv.Shutdown(ctx)
 		log.Fatal("Failed to get random string:", err)
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		srv.Shutdown(ctx)
 		log.Fatal("Failed to read response body:", err)
@@ -160,6 +160,8 @@ func handleDNSRequest(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasSuffix(domain, ".") {
 		domain += "."
 	}
+
+	// TODO: tell the DNS server the IP address of the client
 
 	dnsClient := new(dns.Client)
 	dnsClient.Dialer = &net.Dialer{
