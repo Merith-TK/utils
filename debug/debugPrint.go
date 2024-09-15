@@ -29,7 +29,6 @@ func init() {
 }
 
 // Println prints the given message to the standard output, followed by a newline character.
-// It is used for debugging purposes.
 // Note: Println should not be necessary, but it is included in case it is needed.
 func Println(message ...any) {
 	Print(message)
@@ -37,7 +36,6 @@ func Println(message ...any) {
 }
 
 // Print prints the given message to the standard output.
-// It is used for debugging purposes.
 func Print(message ...any) {
 	if enableDebug {
 		if Title == defaultTitle {
