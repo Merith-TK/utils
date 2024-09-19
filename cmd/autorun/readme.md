@@ -26,6 +26,10 @@ Once the installation is complete, you can use `autorun install` to enable autos
 2. Run the `autorun` executable.
 3. Insert a USB drive into your computer and watch the magic happen!
 
+## Standalone Mode
+
+This program also supports running in "standalone" mode. When an `.autorun.toml` file is placed next to the executable, it will launch using that configuration file instead of launching all configuration files on connected drives.
+
 
 ## Configuration
 

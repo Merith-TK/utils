@@ -14,12 +14,23 @@ func main() {
 		return
 	}
 
-	log.Println("Starting autorun service")
-	for {
-		detectDrives()
-		time.Sleep(5 * time.Second)
-
+	// check if .autorun.toml file exists next to the executable
+	exePath, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
 	}
+	configPath := filepath.Join(filepath.Dir(exePath), ".autorun.toml")
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		log.Println("Starting autorun service")
+		for {
+			detectDrives()
+			time.Sleep(5 * time.Second)
+		}
+	} else {
+		log.Println("Autorun configuration file found")
+		startAutorun(filepath.Dir(exePath))
+	}
+
 }
 
 func copyToStartupFolder() {
