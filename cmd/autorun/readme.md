@@ -50,12 +50,11 @@ Feel free to modify the values according to your needs.
 To configure the `autorun` program, you can create a `.autorun.toml` file in the root directory of your USB drives. Here is an example configuration section for the file:
 
 ```toml
-[autorun]
-    program = "example.exe"
-    # Optional: workDir specifies the relative path to be used as the base directory. If not found, the default is the root directory of the USB drive.
-    # workDir = "./"
-    # Optional: isolated determines whether the environment should be emptied before running the program, allowing for true portability.
-    # isolated = false
+program = "example.exe"
+# Optional: workDir specifies the relative path to be used as the base directory. If not found, the default is the root directory of the USB drive.
+workDir = "./"
+# Optional: isolated determines whether the environment should be emptied before running the program, allowing for true portability.
+isolated = false
 
 [environment]
     # Optional: Define key-value pairs to inject into the program's environment.
