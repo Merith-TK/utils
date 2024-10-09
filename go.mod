@@ -12,6 +12,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/miekg/dns v1.1.62
+	golang.org/x/image v0.21.0
 )
 
 require (
