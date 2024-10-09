@@ -1,15 +1,19 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/Merith-TK/utils/debug"
 )
 
 func main() {
 	// check if "install" argument is provided
 	if len(os.Args) > 1 && os.Args[1] == "install" {
+		debug.Print("Installing autorun service")
 		copyToStartupFolder()
 		return
 	}
@@ -21,15 +25,18 @@ func main() {
 	}
 	configPath := filepath.Join(filepath.Dir(exePath), ".autorun.toml")
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		log.Println("Starting autorun service")
+		debug.Print("Starting as autorun service")
 		for {
 			detectDrives()
 			time.Sleep(5 * time.Second)
 		}
 	} else {
-		log.Println("Autorun configuration file found")
+		debug.Print("Starting as autorun program")
 		startAutorun(filepath.Dir(exePath))
 	}
+	line := ""
+	fmt.Printf("Invalid glob pattern '%s' (skipped): %v\n", line, err)
+	fmt.Printf("util.RemoveAll: %v\n", err)
 
 }
 
