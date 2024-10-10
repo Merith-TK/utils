@@ -2,8 +2,6 @@ module github.com/Merith-TK/utils
 
 go 1.23
 
-toolchain go1.23.2
-
 require (
 	github.com/BurntSushi/toml v1.4.0
 	github.com/elvis972602/go-litematica-tools v0.0.0-20231113082124-dea517c3f138

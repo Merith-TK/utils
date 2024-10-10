@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -10,14 +11,23 @@ import (
 	"github.com/Merith-TK/utils/debug"
 )
 
+var (
+	install       bool
+	startupFolder = filepath.Join(os.Getenv("appdata"), "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
+)
+
+func init() {
+	flag.BoolVar(&install, "install", false, "Install autorun service")
+	flag.BoolVar(&install, "i", false, "Install autorun service")
+}
+
 func main() {
+	flag.Parse()
 	// check if "install" argument is provided
-	if len(os.Args) > 1 && os.Args[1] == "install" {
-		debug.Print("Installing autorun service")
+	if install {
 		copyToStartupFolder()
 		return
 	}
-
 	// check if .autorun.toml file exists next to the executable
 	exePath, err := os.Executable()
 	if err != nil {
@@ -40,13 +50,7 @@ func main() {
 
 }
 
-func copyToStartupFolder() {
-	// get the path to the startup folder
-	startupFolder, err := os.UserConfigDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-	startupFolder = filepath.Join(startupFolder, "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
+func exeDestPath() (string, string) {
 
 	// copy the exe to the startup folder
 	exePath, err := os.Executable()
@@ -55,7 +59,11 @@ func copyToStartupFolder() {
 	}
 	exeName := filepath.Base(exePath)
 	destPath := filepath.Join(startupFolder, exeName)
-	err = os.Rename(exePath, destPath)
+	return exePath, destPath
+}
+func copyToStartupFolder() {
+	exePath, destPath := exeDestPath()
+	err := os.Rename(exePath, destPath)
 	if err != nil {
 		log.Fatal(err)
 	}
