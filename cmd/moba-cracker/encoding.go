@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Merith-TK/utils/debug"
+	"github.com/Merith-TK/utils/pkg/debug"
 )
 
 var VariantBase64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="

@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/Merith-TK/utils/debug"
+	"github.com/Merith-TK/utils/pkg/debug"
 )
 
 type config struct {

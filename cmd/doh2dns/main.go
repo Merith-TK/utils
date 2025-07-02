@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Merith-TK/utils/debug"
+	"github.com/Merith-TK/utils/pkg/debug"
 	"github.com/gorilla/mux"
 	"github.com/miekg/dns"
 )

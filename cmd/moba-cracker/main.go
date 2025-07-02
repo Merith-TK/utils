@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Merith-TK/utils/debug"
+	"github.com/Merith-TK/utils/pkg/debug"
 )
 
 func init() {

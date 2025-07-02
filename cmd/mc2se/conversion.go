@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/Merith-TK/utils/debug"
+	"github.com/Merith-TK/utils/pkg/debug"
 	"github.com/elvis972602/go-litematica-tools/schematic"
 	"github.com/lucasb-eyer/go-colorful"
 )

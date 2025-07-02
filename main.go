@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/Merith-TK/utils/debug"
+	"github.com/Merith-TK/utils/pkg/debug"
 )
 
 func main() {

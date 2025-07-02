@@ -49,7 +49,7 @@ func Print(message ...any) {
 		lines := strings.Split(string(stack), "\n")
 		var newLines []string
 		for i := 0; i < len(lines); i++ {
-			if !strings.Contains(lines[i], "github.com/Merith-TK/utils/debug") && !strings.Contains(lines[i], "runtime/debug") {
+			if !strings.Contains(lines[i], "github.com/Merith-TK/utils/pkg/debug") && !strings.Contains(lines[i], "runtime/debug") {
 				newLines = append(newLines, lines[i])
 			}
 		}
