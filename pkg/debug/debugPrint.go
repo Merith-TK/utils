@@ -8,6 +8,7 @@ import (
 	"os"
 	runDebug "runtime/debug"
 	"strings"
+	"time"
 )
 
 const defaultTitle = ""
@@ -15,6 +16,7 @@ const defaultTitle = ""
 var (
 	enableDebug      bool   = false
 	enableStacktrace bool   = false
+	enableSuicide    bool   = false
 	Title            string = defaultTitle
 )
 
@@ -25,6 +27,19 @@ func init() {
 	}
 	if flag.Lookup("stacktrace") == nil {
 		flag.BoolVar(&enableStacktrace, "stacktrace", flag.Lookup("stacktrace") != nil || os.Getenv("STACKTRACE") == "true", "Enable Stacktrace")
+	}
+	if flag.Lookup("suicide") == nil {
+		flag.BoolVar(&enableSuicide, "suicide", flag.Lookup("suicide") != nil || os.Getenv("SUICIDE") == "true", "Enable Suicide Mode")
+	}
+}
+
+func Suicide(timeout int) {
+	if enableSuicide {
+		go func() {
+			time.Sleep(time.Duration(timeout) * time.Second)
+			log.Printf("[TIMEOUT] Exiting after %d seconds (self-destruct)", timeout)
+			os.Exit(0)
+		}()
 	}
 }
 

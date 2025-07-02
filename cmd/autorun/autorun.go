@@ -6,29 +6,51 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/Merith-TK/utils/pkg/config"
+	"github.com/Merith-TK/utils/pkg/debug"
 )
 
+var conf Config
+
+type Config struct {
+	Autorun     string            `toml:"autorun,omitempty"`
+	WorkDir     string            `toml:"workDir,omitempty"`
+	Isolate     bool              `toml:"isolated,omitempty"`
+	Environment map[string]string `toml:"environment,omitempty"`
+}
+
 func startAutorun(drivePath string) {
+	fmt.Printf("[AUTORUN] Starting autorun check for drive: %s\n", drivePath)
+
 	// Check if the drive path exists
 	if _, err := os.Stat(drivePath); os.IsNotExist(err) {
-		fmt.Printf("Drive path %s does not exist\n", drivePath)
+		fmt.Printf("[AUTORUN] Drive path %s does not exist\n", drivePath)
 		return
 	}
 
-	// Read the config file
-	conf, err := setupConfig(drivePath + "/.autorun.toml")
+	// Read the config file using pkg/config
+	configPath := drivePath + "/.autorun.toml"
+	fmt.Printf("[AUTORUN] Checking for config file: %s\n", configPath)
+	err := config.LoadToml(&conf, configPath)
 	if err != nil {
-		fmt.Printf("Error reading config file: %s\n", err)
+		if !os.IsNotExist(err) {
+			fmt.Printf("[AUTORUN] Error reading config file: %s\n", err)
+		} else {
+			fmt.Printf("[AUTORUN] No config file found: %s\n", configPath)
+		}
 		return
 	}
 
 	if conf.Autorun == "" {
-		fmt.Println("No autorun program specified")
+		fmt.Printf("[AUTORUN] No autorun program specified in config\n")
 		return
 	}
 
-	// Set the environment variables
-	conf = setupEnvironment(conf)
+	fmt.Printf("[AUTORUN] Found autorun config: %s\n", conf.Autorun)
+
+	// Set the environment variables using pkg/config
+	conf = *setupEnvironment(&conf)
 
 	if !filepath.IsAbs(conf.Autorun) {
 		conf.Autorun = filepath.Join(drivePath, conf.Autorun)
@@ -90,10 +112,39 @@ func startAutorun(drivePath string) {
 	cmd.Dir = conf.WorkDir
 
 	// Start the autorun program
+	fmt.Printf("[AUTORUN] Starting command: %s (workdir: %s)\n", conf.Autorun, cmd.Dir)
 	err = cmd.Start()
 	if err != nil {
-		fmt.Printf("Error starting autorun program: %s\n", err)
+		fmt.Printf("[AUTORUN] Error starting autorun program: %s\n", err)
 		return
 	}
 
+	fmt.Printf("[AUTORUN] Successfully started autorun program (PID: %d)\n", cmd.Process.Pid)
+
+}
+
+// SetupEnvironment sets up environment variables and replaces placeholders in the config.
+func setupEnvironment(conf *Config) *Config {
+	debug.Print("config.SetupEnvironment called with config:", conf)
+	// Variables for env replacement
+	drivePath, _ := filepath.Abs("/")
+	drivePath = filepath.ToSlash(drivePath)
+	drivePath = strings.TrimSuffix(drivePath, "/")
+	configEnvReplace := map[string]string{
+		"{work}":  conf.WorkDir,
+		"{drive}": drivePath,
+	}
+	debug.Print("Config environment replacements:", configEnvReplace)
+
+	// Replace Normal Config options
+	conf.Autorun = config.EnvKeyReplace(conf.Autorun, configEnvReplace)
+	conf.WorkDir = config.EnvKeyReplace(conf.WorkDir, configEnvReplace)
+
+	// Replace Environment Variables and set them
+	for k, v := range conf.Environment {
+		conf.Environment[k] = config.EnvKeyReplace(v, configEnvReplace)
+	}
+	config.EnvOverride(conf.Environment)
+
+	return conf
 }
