@@ -10,14 +10,14 @@ import (
 // runAutorunForDrive executes autorun functionality for a specific drive
 func runAutorunForDrive(drive string) {
 	log.Printf("[AUTORUN] Checking drive %s for autorun config", drive)
-	
+
 	// Check security decision
 	decision, metadata, err := securityManager.CheckConfig(drive)
 	if err != nil {
 		log.Printf("[SECURITY] Error checking config security: %v", err)
 		return
 	}
-	
+
 	switch decision {
 	case SecurityDecisionAllow, SecurityDecisionAllowOnce:
 		log.Printf("[SECURITY] Config approved for drive %s", drive)
@@ -27,21 +27,21 @@ func runAutorunForDrive(drive string) {
 		return
 	case SecurityDecisionUnknown:
 		log.Printf("[SECURITY] Unknown config detected for drive %s, showing security dialog", drive)
-		
+
 		// Show security dialog
 		result, err := showSecurityDialog(metadata, drive)
 		if err != nil {
 			log.Printf("[SECURITY] Error showing security dialog: %v", err)
 			return
 		}
-		
+
 		// Save the decision
 		err = securityManager.SaveDecision(metadata, result.Decision, drive)
 		if err != nil {
 			log.Printf("[SECURITY] Error saving decision: %v", err)
 			return
 		}
-		
+
 		// Act on the decision
 		switch result.Decision {
 		case SecurityDecisionAllow, SecurityDecisionAllowOnce:

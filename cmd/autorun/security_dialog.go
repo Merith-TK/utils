@@ -30,7 +30,7 @@ func showSecurityDialog(metadata *ConfigMetadata, drivePath string) (*SecurityDi
 	if err != nil {
 		return nil, fmt.Errorf("failed to get drive serial: %v", err)
 	}
-	
+
 	// Prevent multiple dialogs for the same drive
 	securityDialogMu.Lock()
 	dialogKey := fmt.Sprintf("%08X", driveSerial)

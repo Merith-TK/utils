@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -79,48 +78,108 @@ func startAutorun(drivePath string) {
 	}
 
 	if conf.Isolate {
-		customEnv = isolatedEnv
-		for _, value := range isolatedEnv {
-			if _, err := os.Stat(value); os.IsNotExist(err) {
-				if strings.HasPrefix(value, "C:") {
-					fmt.Printf("Skipping directory creation for %s as it is on C: drive\n", value)
-					continue
-				}
-				err := os.MkdirAll(value, os.ModePerm)
-				if err != nil {
-					fmt.Printf("Error creating directory %s: %s\n", value, err)
-					return
-				}
+		// Try advanced Windows sandboxing first, fall back to environment-only isolation
+		log.Printf("[AUTORUN] Using advanced isolation mode for drive: %s", drivePath)
+
+		// Create isolated directories
+		isolatedRoot := filepath.Join(drivePath, ".isolated")
+		for _, dir := range []string{
+			filepath.Join(isolatedRoot, "User"),
+			filepath.Join(isolatedRoot, "AppData", "Roaming"),
+			filepath.Join(isolatedRoot, "AppData", "Local"),
+			filepath.Join(isolatedRoot, "Temp"),
+		} {
+			if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+				log.Printf("[AUTORUN] Error creating isolated directory %s: %s", dir, err)
+				return
 			}
 		}
+
+		// Prepare environment for execution
+		customEnv = isolatedEnv
+		for key, value := range conf.Environment {
+			customEnv[key] = value
+		}
+
+		// Convert environment map to slice
+		envSlice := []string{}
+		for key, value := range customEnv {
+			envSlice = append(envSlice, key+"="+value)
+		}
+		cmd.Env = envSlice
+		cmd.Dir = conf.WorkDir
+		if cmd.Dir == "" {
+			cmd.Dir = isolatedRoot
+		}
+
+		// Try advanced sandboxing (requires admin privileges)
+		sandboxConfig := SandboxConfig{
+			DrivePath:     drivePath,
+			IsolatedPath:  isolatedRoot,
+			AllowedDrives: []string{drivePath[:1]}, // Only allow access to the target drive
+			MaxMemoryMB:   512,                     // 512MB memory limit
+			TimeoutSec:    300,                     // 5 minute timeout
+		}
+
+		// Attempt to create sandboxed process
+		sandboxedProc, err := createSandboxedProcess(cmd, sandboxConfig)
+		if err != nil {
+			log.Printf("[AUTORUN] Advanced sandboxing failed (may require admin): %s", err)
+			log.Printf("[AUTORUN] Falling back to environment-only isolation")
+
+			// Fall back to regular process execution with isolated environment
+			log.Printf("[AUTORUN] Starting command with environment isolation: %s (workdir: %s)", conf.Autorun, cmd.Dir)
+			err = cmd.Start()
+			if err != nil {
+				log.Printf("[AUTORUN] Error starting autorun program: %s", err)
+				return
+			}
+			log.Printf("[AUTORUN] Successfully started autorun program with environment isolation (PID: %d)", cmd.Process.Pid)
+		} else {
+			// Advanced sandboxing succeeded
+			defer sandboxedProc.Close()
+
+			log.Printf("[AUTORUN] Started sandboxed process for: %s", conf.Autorun)
+
+			// Wait for completion
+			err = sandboxedProc.Wait()
+			if err != nil {
+				log.Printf("[AUTORUN] Sandboxed process error: %s", err)
+			}
+
+			exitCode, _ := sandboxedProc.GetExitCode()
+			log.Printf("[AUTORUN] Sandboxed process completed with exit code: %d", exitCode)
+		}
+
 	} else {
+		// Use original environment-only isolation
 		for _, env := range os.Environ() {
 			parts := strings.SplitN(env, "=", 2)
 			if len(parts) == 2 {
 				customEnv[parts[0]] = parts[1]
 			}
 		}
-	}
 
-	// Add custom environment variables
-	for key, value := range conf.Environment {
-		customEnv[key] = value
-	}
+		// Add custom environment variables
+		for key, value := range conf.Environment {
+			customEnv[key] = value
+		}
 
-	for key, value := range customEnv {
-		cmd.Env = append(cmd.Env, key+"="+value)
-	}
-	cmd.Dir = conf.WorkDir
+		for key, value := range customEnv {
+			cmd.Env = append(cmd.Env, key+"="+value)
+		}
+		cmd.Dir = conf.WorkDir
 
-	// Start the autorun program
-	log.Printf("[AUTORUN] Starting command: %s (workdir: %s)\n", conf.Autorun, cmd.Dir)
-	err = cmd.Start()
-	if err != nil {
-		log.Printf("[AUTORUN] Error starting autorun program: %s\n", err)
-		return
-	}
+		// Start the autorun program
+		log.Printf("[AUTORUN] Starting command: %s (workdir: %s)", conf.Autorun, cmd.Dir)
+		err = cmd.Start()
+		if err != nil {
+			log.Printf("[AUTORUN] Error starting autorun program: %s", err)
+			return
+		}
 
-	log.Printf("[AUTORUN] Successfully started autorun program (PID: %d)\n", cmd.Process.Pid)
+		log.Printf("[AUTORUN] Successfully started autorun program (PID: %d)", cmd.Process.Pid)
+	}
 
 }
 

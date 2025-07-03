@@ -27,11 +27,11 @@ func init() {
 func main() {
 	flag.Parse()
 	log.Printf("[MAIN] Flags parsed. install=%v, timeout=%v", install, timeout)
-	
+
 	// Initialize security manager
 	securityManager = NewSecurityManager()
 	log.Printf("[MAIN] Security manager initialized")
-	
+
 	if timeout > 0 {
 		go func() {
 			time.Sleep(time.Duration(timeout) * time.Second)
@@ -111,5 +111,3 @@ func main() {
 
 	fyneApp.Run()
 }
-
-

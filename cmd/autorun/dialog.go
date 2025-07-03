@@ -24,26 +24,26 @@ func showDriveConfigDialog(win fyne.Window, drive DriveInfo) {
 		return
 	}
 	configWinMu.Unlock()
-	
+
 	title := "Create Autorun Config"
 	if drive.HasConfig {
 		title = "Edit Autorun Config"
 	}
-	
+
 	configWin := fyne.CurrentApp().NewWindow(title)
 	configWin.Resize(fyne.NewSize(500, 600))
 	configWin.SetFixedSize(true)
-	
+
 	// Load config if present
 	cfg := Config{Environment: map[string]string{}}
 	if drive.HasConfig {
 		config.LoadToml(&cfg, filepath.Join(drive.Letter, ".autorun.toml"))
 	}
-	
+
 	// Create the content
 	content := createConfigDialogContent(drive, cfg, configWin)
 	configWin.SetContent(content)
-	
+
 	// Handle window close
 	configWin.SetCloseIntercept(func() {
 		configWinMu.Lock()
@@ -51,12 +51,12 @@ func showDriveConfigDialog(win fyne.Window, drive DriveInfo) {
 		configWinMu.Unlock()
 		configWin.Close()
 	})
-	
+
 	// Track the window
 	configWinMu.Lock()
 	openConfigWins[drive.Letter] = configWin
 	configWinMu.Unlock()
-	
+
 	configWin.Show()
 }
 
@@ -69,10 +69,10 @@ func createConfigDialogContent(drive DriveInfo, cfg Config, configWin fyne.Windo
 	if drive.Label == "" {
 		driveSubtitle.SetText("Unnamed Drive")
 	}
-	
+
 	autorunPath := filepath.Join(drive.Letter, ".autorun.toml")
 	pathLabel := widget.NewLabelWithStyle("Config Path: "+autorunPath, fyne.TextAlignLeading, fyne.TextStyle{Italic: true})
-	
+
 	header := container.NewHBox(
 		driveIcon,
 		container.NewVBox(
@@ -81,24 +81,30 @@ func createConfigDialogContent(drive DriveInfo, cfg Config, configWin fyne.Windo
 			pathLabel,
 		),
 	)
-	
+
 	// Main configuration form
 	autorunEntry := widget.NewEntry()
 	autorunEntry.SetText(cfg.Autorun)
 	autorunEntry.SetPlaceHolder("Path to executable (e.g., /setup.exe)")
-	
+
 	workDirEntry := widget.NewEntry()
 	workDirEntry.SetText(cfg.WorkDir)
 	workDirEntry.SetPlaceHolder("Working directory (optional)")
-	
+
 	isolateCheck := widget.NewCheck("Enable Isolation", nil)
 	isolateCheck.SetChecked(cfg.Isolate)
-	
+
 	// Create help text for isolation
 	isolateHelp := widget.NewRichTextFromMarkdown(`
-**Isolation Mode**: When enabled, the application runs in a sandboxed environment with limited access to your system. This provides better security but may prevent some applications from working properly.`)
+**Enhanced Isolation Mode**: When enabled, the application runs with security restrictions:
+• **Environment isolation**: Redirected user directories (AppData, Temp, etc.) to drive-local folders
+• **Working directory**: Restricted to the drive's .isolated folder by default
+• **Process management**: Attempts advanced sandboxing (requires admin) with memory limits and timeouts
+• **Fallback mode**: If advanced sandboxing fails, uses environment-only isolation
+
+Note: Full filesystem restrictions require administrator privileges. Without admin, only environment isolation is applied.`)
 	isolateHelp.Wrapping = fyne.TextWrapWord
-	
+
 	// Main form
 	form := container.NewVBox(
 		widget.NewCard("Basic Configuration", "", container.NewVBox(
@@ -110,32 +116,32 @@ func createConfigDialogContent(drive DriveInfo, cfg Config, configWin fyne.Windo
 			isolateHelp,
 		)),
 	)
-	
+
 	// Environment variables section
 	envCard, envRows := createEnvironmentCard(cfg.Environment)
 	form.Add(envCard)
-	
+
 	// Action buttons
 	saveBtn := widget.NewButton("Save Configuration", func() {
 		saveConfig(drive, autorunEntry, workDirEntry, isolateCheck, envRows, configWin)
 	})
 	saveBtn.Importance = widget.HighImportance
-	
+
 	cancelBtn := widget.NewButton("Cancel", func() {
 		configWinMu.Lock()
 		delete(openConfigWins, drive.Letter)
 		configWinMu.Unlock()
 		configWin.Close()
 	})
-	
+
 	buttonContainer := container.NewHBox(
 		cancelBtn,
 		saveBtn,
 	)
-	
+
 	// Scroll container for the form
 	scrollContainer := container.NewVScroll(form)
-	
+
 	// Main layout
 	return container.NewBorder(
 		container.NewVBox(header, widget.NewSeparator()),
@@ -150,13 +156,13 @@ func createConfigDialogContent(drive DriveInfo, cfg Config, configWin fyne.Windo
 func createEnvironmentCard(environment map[string]string) (*widget.Card, *[]*envRow) {
 	envRows := []*envRow{}
 	envContainer := container.NewVBox()
-	
+
 	// Add existing environment variables
 	for k, v := range environment {
 		row := createEnvironmentRow(k, v, &envRows, envContainer)
 		envContainer.Add(row)
 	}
-	
+
 	// Add environment variable button
 	addEnvBtn := widget.NewButton("Add Environment Variable", func() {
 		row := createEnvironmentRow("", "", &envRows, envContainer)
@@ -164,12 +170,12 @@ func createEnvironmentCard(environment map[string]string) (*widget.Card, *[]*env
 		envContainer.Refresh()
 	})
 	addEnvBtn.SetIcon(theme.ContentAddIcon())
-	
+
 	cardContent := container.NewVBox(
 		envContainer,
 		addEnvBtn,
 	)
-	
+
 	return widget.NewCard("Environment Variables", "Custom environment variables for the application", cardContent), &envRows
 }
 
@@ -185,11 +191,11 @@ func createEnvironmentRow(key, value string, envRows *[]*envRow, envContainer *f
 	keyEntry := widget.NewEntry()
 	keyEntry.SetText(key)
 	keyEntry.SetPlaceHolder("Variable name")
-	
+
 	valueEntry := widget.NewEntry()
 	valueEntry.SetText(value)
 	valueEntry.SetPlaceHolder("Variable value")
-	
+
 	deleteBtn := widget.NewButton("", func() {
 		// Remove this row
 		for i, row := range *envRows {
@@ -203,19 +209,19 @@ func createEnvironmentRow(key, value string, envRows *[]*envRow, envContainer *f
 	})
 	deleteBtn.SetIcon(theme.DeleteIcon())
 	deleteBtn.Importance = widget.DangerImportance
-	
+
 	rowContainer := container.NewBorder(
 		nil, nil, nil, deleteBtn,
 		container.NewGridWithColumns(2, keyEntry, valueEntry),
 	)
-	
+
 	row := &envRow{
 		keyEntry:   keyEntry,
 		valueEntry: valueEntry,
 		container:  rowContainer,
 	}
 	*envRows = append(*envRows, row)
-	
+
 	return rowContainer
 }
 
@@ -227,7 +233,7 @@ func saveConfig(drive DriveInfo, autorunEntry, workDirEntry *widget.Entry, isola
 		Isolate:     isolateCheck.Checked,
 		Environment: make(map[string]string),
 	}
-	
+
 	// Extract environment variables from the rows
 	for _, row := range *envRows {
 		key := row.keyEntry.Text
@@ -236,7 +242,7 @@ func saveConfig(drive DriveInfo, autorunEntry, workDirEntry *widget.Entry, isola
 			cfg.Environment[key] = value
 		}
 	}
-	
+
 	autorunPath := filepath.Join(drive.Letter, ".autorun.toml")
 	if err := config.SaveToml(autorunPath, cfg); err == nil {
 		configWin.Close()
