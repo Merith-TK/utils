@@ -7,7 +7,8 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// LoadFile loads and parses the config file at the given path into the provided struct pointer.
+// LoadToml loads and parses the config file at the given path into the provided struct pointer.
+// The config file must be in TOML format.
 func LoadToml(target interface{}, configfile string) error {
 	configfile = filepath.ToSlash(configfile)
 	if _, err := os.Stat(configfile); os.IsNotExist(err) {
@@ -20,7 +21,7 @@ func LoadToml(target interface{}, configfile string) error {
 	return toml.Unmarshal([]byte(str), target)
 }
 
-// SaveConfig saves a Config to the given path.
+// SaveToml saves a struct as TOML to the given file path.
 func SaveToml(path string, cfg interface{}) error {
 	f, err := os.Create(path)
 	if err != nil {

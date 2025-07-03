@@ -1,3 +1,4 @@
+// Package archive provides utilities for working with archive formats, such as ZIP.
 package archive
 
 import (
@@ -7,6 +8,9 @@ import (
 	"path/filepath"
 )
 
+// Unzip extracts a ZIP archive from src to the dest directory.
+// All files and folders in the archive will be extracted, preserving the directory structure.
+// Returns an error if extraction fails.
 func Unzip(src, dest string) error {
 	r, err := zip.OpenReader(src)
 	if err != nil {

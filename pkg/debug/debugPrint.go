@@ -11,15 +11,21 @@ import (
 	"time"
 )
 
+// defaultTitle is the default prefix for debug messages.
 const defaultTitle = ""
 
 var (
-	enableDebug      bool   = false
-	enableStacktrace bool   = false
-	enableSuicide    bool   = false
-	Title            string = defaultTitle
+	// enableDebug indicates if debug mode is enabled.
+	enableDebug bool = false
+	// enableStacktrace indicates if stacktrace output is enabled.
+	enableStacktrace bool = false
+	// enableSuicide indicates if suicide mode is enabled.
+	enableSuicide bool = false
+	// Title is the current debug title prefix.
+	Title string = defaultTitle
 )
 
+// init registers debug, stacktrace, and suicide flags.
 func init() {
 	// register debug flag
 	if flag.Lookup("debug") == nil {
@@ -33,6 +39,7 @@ func init() {
 	}
 }
 
+// Suicide will self-destruct the process after the given timeout (in seconds) if suicide mode is enabled.
 func Suicide(timeout int) {
 	if enableSuicide {
 		go func() {
@@ -50,7 +57,7 @@ func Println(message ...any) {
 	fmt.Print("\n")
 }
 
-// Print prints the given message to the standard output.
+// Print prints the given message to the standard output if debug mode is enabled.
 func Print(message ...any) {
 	if enableDebug {
 		if Title == defaultTitle {

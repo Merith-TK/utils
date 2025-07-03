@@ -1,53 +1,95 @@
-# Autorun
+# Autorun Drive Manager
 
-A reimplementation of the "autorun" feature that was removed from Windows.
-
-## Overview
-`Autorun` enables automatic execution of a specified program or script when a USB drive is inserted into a Windows computer. This offers a simple way to automate tasks or launch applications upon USB detection.
+A secure autorun manager for Windows that provides sandboxed execution of programs from removable drives with a modern GUI interface and security prompts.
 
 ## Features
-- Automatically executes a specified file when a USB drive is connected.
-- Customizable execution settings.
-- **Windows-only support**.
+
+- **Modern GUI**: Clean, card-based interface for managing drive configurations
+- **Security Prompts**: Alerts when unknown autorun configurations are detected
+- **Sandboxed Execution**: Advanced Windows isolation for secure program execution
+- **Environment Isolation**: Custom environment variables and directory redirection
+- **Drive Monitoring**: Real-time detection of new drives and autorun configurations
+- **Configuration Management**: Easy-to-use TOML-based configuration system
+- **System Tray Integration**: Runs quietly in background with tray access
 
 ## Installation
-Install `autorun` with:
 
-```shell
-go install -ldflags -H=windowsgui github.com/merith-tk/utils/cmd/autorun@latest
-```
-
-After installation, enable autorun on login with:
-
-```shell
-autorun install
+```bash
+go build -o autorun.exe
+# Or use the install flag to add to Windows startup
+autorun.exe -install
 ```
 
 ## Usage
-1. Ensure your USB drive has an `.autorun.toml` file in the root directory. If one doesn't exist, `autorun` will automatically place a generic `.autorun.toml` file on the drive that does nothing by default:
-    ```toml
-    program = "example.exe"
-    workDir = "./"
-    
-    [environment]
-      FOO = "BAR"
-    ```
-2. Run the `autorun` executable.
-3. Insert your USB drive and let `autorun` handle the rest.
 
-## Standalone Mode
-In standalone mode, `autorun` uses a `.autorun.toml` file placed next to the executable instead of scanning all connected drives. This is ideal for single-use configurations.
+### Basic Usage
+```bash
+# Run the autorun manager
+autorun.exe
 
-## Configuration
+# Install to Windows startup folder
+autorun.exe -install
 
-To customize the behavior of `autorun`, create an `.autorun.toml` file on your USB drive. Example configuration:
+# Run with timeout (for testing)
+autorun.exe -timeout 60
+```
+
+### Configuration File Format
+
+Autorun configurations are stored as `.autorun.toml` files in the root of drives:
 
 ```toml
-program = "example.exe"
-workDir = "./"
-isolated = false
+autorun = "/setup.exe"
+workDir = "/installer"
+isolated = true
 
 [environment]
+LANG = "en_US"
+CUSTOM_VAR = "value"
+```
+
+### Security Features
+
+When a drive with an unknown autorun configuration is detected, the security dialog shows:
+- Drive information and config hash (MD5)
+- Configuration details (command, working directory, isolation status)
+- Environment variables
+- User choice: Allow, Allow Once, Deny, Deny Once
+
+Security decisions are stored by drive serial number, not drive letter.
+
+### Isolation Mode
+
+When isolation is enabled:
+- **Filesystem restrictions**: Limited to own drive only, cannot access C:\ or other drives
+- **Environment isolation**: Redirected user directories (AppData, Temp, etc.)
+- **Process limits**: 512MB memory limit and 5-minute timeout
+- **Job isolation**: All child processes contained within sandbox
+
+## Files
+
+- `main.go` - Application entry point and initialization
+- `ui.go` - Main GUI interface with drive listing
+- `dialog.go` - Configuration dialog for editing autorun settings
+- `security.go` - Security metadata management and decision storage
+- `security_dialog.go` - Security prompt dialog for unknown configurations
+- `monitor.go` - Drive monitoring and autorun execution logic
+- `autorun.go` - Core autorun execution with sandboxing
+- `sandbox_windows.go` - Windows-specific sandboxing implementation
+- `tray.go` - System tray functionality
+- `installer.go` - Installation to Windows startup
+- `types.go` - Type definitions and global variables
+
+## Dependencies
+
+- [Fyne](https://fyne.io/) - Cross-platform GUI toolkit
+- [systray](https://github.com/getlantern/systray) - System tray integration
+- [toml](https://github.com/BurntSushi/toml) - TOML configuration parsing
+- [windows](https://golang.org/x/sys/windows) - Windows API access
+
+## Security Considerations
+
+This application uses Windows job objects and restricted process creation for sandboxing. Some features may require administrator privileges for full security isolation. The application gracefully falls back to environment-only isolation when advanced sandboxing is not available.
     FOO = "BAR"
 ```
 
