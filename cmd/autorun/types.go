@@ -9,3 +9,6 @@ type DriveInfo struct {
 
 // uiAction represents a UI action function
 type uiAction func()
+
+// Global security manager instance
+var securityManager *SecurityManager

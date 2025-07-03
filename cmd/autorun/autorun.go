@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,33 +22,33 @@ type Config struct {
 }
 
 func startAutorun(drivePath string) {
-	fmt.Printf("[AUTORUN] Starting autorun check for drive: %s\n", drivePath)
+	log.Printf("[AUTORUN] Starting autorun check for drive: %s\n", drivePath)
 
 	// Check if the drive path exists
 	if _, err := os.Stat(drivePath); os.IsNotExist(err) {
-		fmt.Printf("[AUTORUN] Drive path %s does not exist\n", drivePath)
+		log.Printf("[AUTORUN] Drive path %s does not exist\n", drivePath)
 		return
 	}
 
 	// Read the config file using pkg/config
 	configPath := drivePath + "/.autorun.toml"
-	fmt.Printf("[AUTORUN] Checking for config file: %s\n", configPath)
+	log.Printf("[AUTORUN] Checking for config file: %s\n", configPath)
 	err := config.LoadToml(&conf, configPath)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			fmt.Printf("[AUTORUN] Error reading config file: %s\n", err)
+			log.Printf("[AUTORUN] Error reading config file: %s\n", err)
 		} else {
-			fmt.Printf("[AUTORUN] No config file found: %s\n", configPath)
+			log.Printf("[AUTORUN] No config file found: %s\n", configPath)
 		}
 		return
 	}
 
 	if conf.Autorun == "" {
-		fmt.Printf("[AUTORUN] No autorun program specified in config\n")
+		log.Printf("[AUTORUN] No autorun program specified in config\n")
 		return
 	}
 
-	fmt.Printf("[AUTORUN] Found autorun config: %s\n", conf.Autorun)
+	log.Printf("[AUTORUN] Found autorun config: %s\n", conf.Autorun)
 
 	// Set the environment variables using pkg/config
 	conf = *setupEnvironment(&conf)
@@ -112,14 +113,14 @@ func startAutorun(drivePath string) {
 	cmd.Dir = conf.WorkDir
 
 	// Start the autorun program
-	fmt.Printf("[AUTORUN] Starting command: %s (workdir: %s)\n", conf.Autorun, cmd.Dir)
+	log.Printf("[AUTORUN] Starting command: %s (workdir: %s)\n", conf.Autorun, cmd.Dir)
 	err = cmd.Start()
 	if err != nil {
-		fmt.Printf("[AUTORUN] Error starting autorun program: %s\n", err)
+		log.Printf("[AUTORUN] Error starting autorun program: %s\n", err)
 		return
 	}
 
-	fmt.Printf("[AUTORUN] Successfully started autorun program (PID: %d)\n", cmd.Process.Pid)
+	log.Printf("[AUTORUN] Successfully started autorun program (PID: %d)\n", cmd.Process.Pid)
 
 }
 

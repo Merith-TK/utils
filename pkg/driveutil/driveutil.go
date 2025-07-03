@@ -3,11 +3,11 @@ package driveutil
 
 import (
 	"fmt"
-	"log"
 	"syscall"
 	"time"
 
 	"golang.org/x/sys/windows"
+	"github.com/Merith-TK/utils/pkg/debug"
 )
 
 // DriveStore keeps track of currently detected drives by their unique ID.
@@ -26,7 +26,7 @@ type DriveInfo struct {
 func (store DriveStore) DetectDrives(onNewDrive func(drive string, serial uint32)) {
 	mask, err := windows.GetLogicalDrives()
 	if err != nil {
-		log.Printf("Failed to get logical drives: %v", err)
+		debug.Print("Failed to get logical drives:", err)
 		return
 	}
 	for i := 0; i < 26; i++ {
@@ -34,7 +34,8 @@ func (store DriveStore) DetectDrives(onNewDrive func(drive string, serial uint32
 			continue
 		}
 		drive := fmt.Sprintf("%c:\\", 'A'+i)
-		driveType := windows.GetDriveType(syscall.StringToUTF16Ptr(drive))
+		ptr, _ := syscall.UTF16PtrFromString(drive)
+		driveType := windows.GetDriveType(ptr)
 		if driveType != windows.DRIVE_REMOVABLE && driveType != windows.DRIVE_FIXED {
 			continue
 		}
@@ -85,7 +86,8 @@ func GetVolumeSerialNumber(root string) (uint32, error) {
 
 // DriveExists checks if a drive path exists.
 func DriveExists(drive string) bool {
-	_, err := syscall.GetFileAttributes(syscall.StringToUTF16Ptr(drive))
+	ptr, _ := syscall.UTF16PtrFromString(drive)
+	_, err := syscall.GetFileAttributes(ptr)
 	return err == nil
 }
 
@@ -102,26 +104,26 @@ func ListDrives() []DriveInfo {
 	var drives []DriveInfo
 	mask, err := windows.GetLogicalDrives()
 	if err != nil {
-		log.Printf("Failed to get logical drives: %v", err)
+		debug.Print("Failed to get logical drives:", err)
 		return drives
 	}
-	log.Printf("Logical drive mask: %08b", mask)
+	debug.Print("Logical drive mask:", fmt.Sprintf("%08b", mask))
 	for i := 0; i < 26; i++ {
 		if mask&(1<<uint(i)) == 0 {
 			continue
 		}
 		drive := fmt.Sprintf("%c:\\", 'A'+i)
-		log.Printf("Checking drive: %s", drive)
+		debug.Print("Checking drive:", drive)
 		ptr, _ := syscall.UTF16PtrFromString(drive)
 		driveType := windows.GetDriveType(ptr)
-		log.Printf("Drive %s type: %d", drive, driveType)
+		debug.Print("Drive", drive, "type:", driveType)
 		if driveType != windows.DRIVE_REMOVABLE && driveType != windows.DRIVE_FIXED {
-			log.Printf("Drive %s skipped (not removable/fixed)", drive)
+			debug.Print("Drive", drive, "skipped (not removable/fixed)")
 			continue
 		}
 		serial, err := GetVolumeSerialNumber(drive)
 		if err != nil {
-			log.Printf("Drive %s serial error: %v", drive, err)
+			debug.Print("Drive", drive, "serial error:", err)
 			continue
 		}
 		var volumeName [windows.MAX_PATH + 1]uint16
@@ -134,11 +136,11 @@ func ListDrives() []DriveInfo {
 			&fsName[0], uint32(len(fsName)),
 		)
 		if err != nil {
-			log.Printf("Drive %s label error: %v", drive, err)
+			debug.Print("Drive", drive, "label error:", err)
 			continue
 		}
 		label := syscall.UTF16ToString(volumeName[:])
-		log.Printf("Drive %s label: %s, serial: %08X", drive, label, serial)
+		debug.Print("Drive", drive, "label:", label, "serial:", fmt.Sprintf("%08X", serial))
 		drives = append(drives, DriveInfo{
 			Letter: drive,
 			Label:  label,
@@ -146,6 +148,6 @@ func ListDrives() []DriveInfo {
 			Type:   driveType,
 		})
 	}
-	log.Printf("Drives found: %d", len(drives))
+	debug.Print("Drives found:", len(drives))
 	return drives
 }

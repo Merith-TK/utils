@@ -6,6 +6,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	driveutil "github.com/Merith-TK/utils/pkg/driveutil"
 )
@@ -27,53 +28,150 @@ func buildMainContent(win fyne.Window, configDialogCh chan<- DriveInfo) fyne.Can
 		})
 	}
 	
-	columns := []string{"Drive", "Label", "Has Config"}
-	table := widget.NewTable(
-		func() (int, int) { return len(drives) + 1, len(columns) },
-		func() fyne.CanvasObject {
-			return widget.NewLabel("")
-		},
-		func(id widget.TableCellID, cell fyne.CanvasObject) {
-			label := cell.(*widget.Label)
-			if id.Row == 0 {
-				label.TextStyle = fyne.TextStyle{Bold: true}
-				label.SetText(columns[id.Col])
-			} else {
-				drive := drives[id.Row-1]
-				switch id.Col {
-				case 0:
-					label.SetText(drive.Letter)
-				case 1:
-					label.SetText(drive.Label)
-				case 2:
-					if drive.HasConfig {
-						label.SetText("Yes")
-					} else {
-						label.SetText("No")
-					}
-				}
-				label.TextStyle = fyne.TextStyle{} // not bold for data
-			}
-		},
+	// Create header with icon and title
+	headerIcon := widget.NewIcon(theme.StorageIcon())
+	headerTitle := widget.NewLabelWithStyle("Autorun Drive Manager", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
+	headerSubtitle := widget.NewLabelWithStyle("Detected Storage Drives", fyne.TextAlignCenter, fyne.TextStyle{})
+	
+	header := container.NewVBox(
+		container.NewHBox(
+			headerIcon,
+			container.NewVBox(headerTitle, headerSubtitle),
+		),
+		widget.NewSeparator(),
 	)
 	
-	table.OnSelected = func(id widget.TableCellID) {
-		if id.Row > 0 {
-			configDialogCh <- drives[id.Row-1]
+	// Create drive cards instead of table
+	driveCards := container.NewVBox()
+	
+	if len(drives) == 0 {
+		emptyIcon := widget.NewIcon(theme.InfoIcon())
+		emptyLabel := widget.NewLabelWithStyle("No drives detected", fyne.TextAlignCenter, fyne.TextStyle{})
+		emptyCard := container.NewBorder(
+			nil, nil, emptyIcon, nil,
+			emptyLabel,
+		)
+		driveCards.Add(emptyCard)
+	} else {
+		for i, drive := range drives {
+			card := createDriveCard(drive, configDialogCh)
+			driveCards.Add(card)
+			
+			// Add spacing between cards (except for the last one)
+			if i < len(drives)-1 {
+				driveCards.Add(widget.NewSeparator())
+			}
 		}
 	}
 	
-	table.SetColumnWidth(0, 60)
-	table.SetColumnWidth(1, 120)
-	table.SetColumnWidth(2, 80)
-
+	// Create footer with information
+	footer := container.NewVBox(
+		widget.NewSeparator(),
+		widget.NewLabelWithStyle("Click on a drive to configure autorun settings", fyne.TextAlignCenter, fyne.TextStyle{Italic: true}),
+	)
+	
+	// Scroll container for the cards
+	scrollContainer := container.NewVScroll(driveCards)
+	scrollContainer.SetMinSize(fyne.NewSize(400, 200))
+	
 	return container.NewBorder(
-		widget.NewLabelWithStyle("Detected Drives", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-		nil, // bottom
-		nil, // left
-		nil, // right
-		container.NewStack(
-			container.NewVScroll(table),
+		header,
+		footer,
+		nil,
+		nil,
+		scrollContainer,
+	)
+}
+
+// createDriveCard creates a modern card for each drive
+func createDriveCard(drive DriveInfo, configDialogCh chan<- DriveInfo) fyne.CanvasObject {
+	// Drive type icon
+	var driveIcon fyne.Resource
+	switch drive.Letter {
+	case "C:\\":
+		driveIcon = theme.ComputerIcon()
+	default:
+		driveIcon = theme.StorageIcon()
+	}
+	
+	icon := widget.NewIcon(driveIcon)
+	icon.Resize(fyne.NewSize(32, 32))
+	
+	// Drive letter (large and bold)
+	driveLabel := widget.NewLabelWithStyle(drive.Letter, fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
+	
+	// Drive name/label
+	var displayLabel string
+	if drive.Label == "" {
+		displayLabel = "Unnamed Drive"
+	} else {
+		displayLabel = drive.Label
+	}
+	nameLabel := widget.NewLabelWithStyle(displayLabel, fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
+	
+	// Config status with icon
+	var configIcon fyne.Resource
+	var configText string
+	var configColor fyne.TextStyle
+	
+	if drive.HasConfig {
+		configIcon = theme.ConfirmIcon()
+		configText = "Autorun Config Found"
+		configColor = fyne.TextStyle{}
+	} else {
+		configIcon = theme.InfoIcon()
+		configText = "No Autorun Config"
+		configColor = fyne.TextStyle{Italic: true}
+	}
+	
+	configStatusIcon := widget.NewIcon(configIcon)
+	configStatusLabel := widget.NewLabelWithStyle(configText, fyne.TextAlignLeading, configColor)
+	
+	// Action button
+	actionButton := widget.NewButton("Configure", func() {
+		configDialogCh <- drive
+	})
+	
+	if drive.HasConfig {
+		actionButton.SetText("Edit Config")
+		actionButton.Importance = widget.MediumImportance
+	} else {
+		actionButton.SetText("Create Config")
+		actionButton.Importance = widget.LowImportance
+	}
+	
+	// Left side: icon and drive letter in a centered column
+	leftSide := container.NewVBox(
+		container.NewCenter(icon),
+		container.NewCenter(driveLabel),
+	)
+	leftSide.Resize(fyne.NewSize(80, 60))
+	
+	// Middle section: drive info
+	middleSection := container.NewVBox(
+		nameLabel,
+		container.NewHBox(
+			configStatusIcon,
+			configStatusLabel,
 		),
 	)
+	
+	// Right side: action button
+	rightSide := container.NewVBox(
+		actionButton,
+	)
+	
+	// Main card content
+	cardContent := container.NewBorder(
+		nil, // top
+		nil, // bottom
+		leftSide, // left
+		rightSide, // right
+		middleSection, // center
+	)
+	
+	// Add padding and border styling
+	cardWithPadding := container.NewPadded(cardContent)
+	
+	return cardWithPadding
 }

@@ -27,6 +27,11 @@ func init() {
 func main() {
 	flag.Parse()
 	log.Printf("[MAIN] Flags parsed. install=%v, timeout=%v", install, timeout)
+	
+	// Initialize security manager
+	securityManager = NewSecurityManager()
+	log.Printf("[MAIN] Security manager initialized")
+	
 	if timeout > 0 {
 		go func() {
 			time.Sleep(time.Duration(timeout) * time.Second)
@@ -51,8 +56,8 @@ func main() {
 
 	fyneApp := app.New()
 	win := fyneApp.NewWindow("Autorun Drive Manager")
-	win.Resize(fyne.NewSize(400, 300))
-	win.SetFixedSize(true)
+	win.Resize(fyne.NewSize(500, 400))
+	win.SetFixedSize(false) // Allow resizing for better card layout
 	win.SetCloseIntercept(func() {
 		log.Println("[FYNE] Window close intercepted, hiding window")
 		win.Hide()
