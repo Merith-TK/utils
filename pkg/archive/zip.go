@@ -18,14 +18,26 @@ func Unzip(src, dest string) error {
 	}
 	defer r.Close()
 
+	// Ensure destination directory exists
+	if err := os.MkdirAll(dest, os.ModePerm); err != nil {
+		return err
+	}
+
 	for _, f := range r.File {
 		fpath := filepath.Join(dest, f.Name)
+		
+		// Clean the path to handle any issues with path separators
+		fpath = filepath.Clean(fpath)
+		
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(fpath, os.ModePerm)
+			if err := os.MkdirAll(fpath, os.ModePerm); err != nil {
+				return err
+			}
 			continue
 		}
 
-		if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
+		// Ensure parent directory exists for files
+		if err := os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
 			return err
 		}
 
@@ -36,6 +48,7 @@ func Unzip(src, dest string) error {
 
 		rc, err := f.Open()
 		if err != nil {
+			outFile.Close()
 			return err
 		}
 
