@@ -1,3 +1,32 @@
+// Package main implements a DNS-over-HTTPS to traditional DNS proxy server
+// that converts DoH requests to standard DNS queries and returns JSON responses.
+//
+// The doh2dns utility acts as a bridge between DoH clients and traditional DNS servers,
+// providing a secure HTTPS interface while using standard DNS resolution on the backend.
+// It includes verification mechanisms and supports configurable upstream DNS servers.
+//
+// Features:
+//   - DoH to DNS proxy with JSON response formatting
+//   - Configurable upstream DNS server
+//   - Host address verification with random string validation
+//   - Support for multiple DNS record types
+//   - Automatic HTTPS enforcement (unless in debug mode)
+//   - Gorilla Mux routing for HTTP handling
+//
+// Usage:
+//   doh2dns -host [host-address] [-dns dns-server]
+//
+// Flags:
+//   -host    The hosted address for this DNS server (required)
+//   -dns     DNS server address (default: 1.1.1.1:53)
+//
+// Examples:
+//   doh2dns -host example.com
+//   doh2dns -host https://dns.example.com -dns 8.8.8.8:53
+//   doh2dns -host localhost:8080 -dns 192.168.1.1
+//
+// The server starts on port 8080 and provides the /dns-query endpoint
+// compatible with RFC 8484 DoH JSON API format.
 package main
 
 import (

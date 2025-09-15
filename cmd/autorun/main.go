@@ -1,3 +1,27 @@
+// Package main implements a Windows system tray application that monitors removable drives
+// and automatically executes configured programs when drives are inserted.
+//
+// The autorun application provides:
+//   - System tray integration with Fyne UI framework
+//   - Real-time drive monitoring and detection
+//   - Security dialogs for drive access confirmation
+//   - Per-drive configuration management
+//   - Startup folder installation capability
+//   - Timeout-based self-destruct for testing
+//
+// Usage:
+//   autorun [-install] [-timeout seconds]
+//
+// Flags:
+//   -install, -i    Install autorun service to Windows startup folder
+//   -timeout        Exit after N seconds (primarily for testing)
+//
+// The application runs in the system tray and shows a window when clicked.
+// It continuously monitors for new removable drives and can execute configured
+// actions when drives matching specific criteria are detected.
+//
+// Installation copies the executable to the Windows startup folder:
+//   %APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\
 package main
 
 import (

@@ -1,4 +1,21 @@
-// Package archive provides utilities for working with archive formats, such as ZIP.
+// Package archive provides utilities for working with archive formats, currently supporting ZIP extraction.
+//
+// The package focuses on safe and reliable archive extraction with proper path handling
+// and directory structure preservation. It includes security measures to prevent
+// path traversal attacks and ensures proper file permissions are maintained.
+//
+// Current functionality:
+//   - ZIP archive extraction with full directory structure preservation
+//   - Safe path handling to prevent directory traversal attacks
+//   - Automatic parent directory creation
+//   - Proper file permission preservation
+//
+// Example usage:
+//
+//	err := archive.Unzip("archive.zip", "/path/to/extract")
+//	if err != nil {
+//		log.Fatal("Failed to extract archive:", err)
+//	}
 package archive
 
 import (

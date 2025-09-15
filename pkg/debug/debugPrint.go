@@ -1,4 +1,22 @@
-// Package debug provides utilities for debugging purposes.
+// Package debug provides comprehensive debugging utilities including conditional logging,
+// stacktrace output, and self-destruct functionality for development and testing.
+//
+// The package supports multiple debugging modes:
+//   - Debug mode: Enables debug output with optional custom titles
+//   - Stacktrace mode: Includes filtered stack traces in debug output
+//   - Suicide mode: Allows processes to self-terminate after a timeout
+//
+// Configuration can be done via command-line flags or environment variables:
+//   - -debug or DEBUG=true: Enable debug output
+//   - -stacktrace or STACKTRACE=true: Enable stacktrace output
+//   - -suicide or SUICIDE=true: Enable suicide mode
+//
+// Example usage:
+//
+//	debug.SetDebug(true)
+//	debug.SetTitle("MYAPP")
+//	debug.Print("This is a debug message")
+//	debug.Suicide(30) // Self-destruct after 30 seconds if suicide mode enabled
 package debug
 
 import (
@@ -39,7 +57,10 @@ func init() {
 	}
 }
 
-// Suicide will self-destruct the process after the given timeout (in seconds) if suicide mode is enabled.
+// Suicide enables a self-destruct mechanism that will terminate the process after the specified
+// timeout in seconds, but only if suicide mode is enabled via flag or environment variable.
+// This is primarily used for testing and development to prevent runaway processes.
+// The function is non-blocking and starts a goroutine to handle the timeout.
 func Suicide(timeout int) {
 	if enableSuicide {
 		go func() {
@@ -50,14 +71,18 @@ func Suicide(timeout int) {
 	}
 }
 
-// Println prints the given message to the standard output, followed by a newline character.
-// Note: Println should not be necessary, but it is included in case it is needed.
+// Println prints the given message to the standard output followed by a newline character,
+// but only if debug mode is enabled. This is a convenience wrapper around Print that
+// automatically adds a newline. The message is prefixed with [DEBUG] and optional title.
 func Println(message ...any) {
 	Print(message)
 	fmt.Print("\n")
 }
 
-// Print prints the given message to the standard output if debug mode is enabled.
+// Print outputs the given message to standard output if debug mode is enabled.
+// Messages are prefixed with [DEBUG] and optionally include a custom title if set.
+// If stacktrace mode is also enabled, a filtered stack trace is included that
+// excludes internal debug package frames for cleaner output.
 func Print(message ...any) {
 	if enableDebug {
 		if Title == defaultTitle {

@@ -1,3 +1,34 @@
+// Package main implements a Minecraft to Space Engineers schematic converter
+// that transforms Litematica schematic files into Space Engineers blueprint format.
+//
+// The mc2se utility converts Minecraft structures saved in Litematica format
+// into Space Engineers .sbc blueprint files, enabling cross-game structure transfer.
+// It includes block mapping, color conversion, and grid size options.
+//
+// Features:
+//   - Litematica schematic file loading and parsing
+//   - Block-by-block conversion with material mapping
+//   - Color conversion and block skin handling
+//   - Small grid and large grid block support
+//   - Custom definitions file support for block mapping
+//   - Debug output integration for conversion tracking
+//
+// Usage:
+//   mc2se -i [input-file] [-o output-file] [-d definitions-file] [-s]
+//
+// Flags:
+//   -i    Input Litematica schematic file (required)
+//   -o    Output Space Engineers blueprint file (default: output.sbc)
+//   -d    Custom block definitions JSON file (default: definitions.json)
+//   -s    Use small grid blocks instead of large grid
+//
+// Examples:
+//   mc2se -i castle.litematic -o castle.sbc
+//   mc2se -i house.litematic -o house.sbc -s
+//   mc2se -i structure.litematic -d custom_blocks.json
+//
+// The converter processes each block in the schematic, maps it to appropriate
+// Space Engineers blocks, and generates a complete .sbc blueprint file.
 package main
 
 import (

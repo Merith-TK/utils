@@ -1,3 +1,31 @@
+// Package main implements a DNS-over-HTTPS (DoH) client that queries DNS servers
+// using the DoH protocol with JSON response parsing.
+//
+// The doh-poke utility performs DNS queries over HTTPS using the RFC 8484 standard,
+// providing a secure alternative to traditional DNS queries. It supports automatic
+// HTTPS scheme detection and configurable DoH server endpoints.
+//
+// Features:
+//   - DoH query support with JSON response parsing
+//   - Automatic HTTPS scheme detection and URL reconstruction
+//   - Configurable DoH server endpoints
+//   - A record resolution with multiple answer support
+//   - Debug output integration
+//
+// Usage:
+//   doh-poke [doh-server] [domain]
+//
+// Parameters:
+//   doh-server  DoH server URL (scheme optional, defaults to HTTPS)
+//   domain      Domain name to resolve
+//
+// Examples:
+//   doh-poke cloudflare-dns.com example.com
+//   doh-poke https://1.1.1.1/dns-query google.com
+//   doh-poke 8.8.8.8 github.com
+//
+// The tool automatically appends /dns-query to the path if not specified
+// and handles URL parsing with proper scheme detection.
 package main
 
 import (

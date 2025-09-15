@@ -1,4 +1,34 @@
-// Package driveutil provides drive enumeration, metadata extraction, and utility functions for Windows drives.
+// Package driveutil provides comprehensive Windows drive management utilities including
+// drive enumeration, metadata extraction, monitoring, and utility functions.
+//
+// This package is Windows-specific and uses the Windows API to interact with drives.
+// It supports both fixed and removable drives, providing detailed information about
+// each drive including serial numbers, labels, and types.
+//
+// Key features:
+//   - Drive detection and enumeration
+//   - Volume serial number extraction
+//   - Drive monitoring with callback support
+//   - Drive existence checking
+//   - Comprehensive drive metadata (label, type, serial)
+//
+// The DriveStore type provides stateful drive monitoring, tracking drives by their
+// unique combination of drive letter and serial number to detect insertions and removals.
+//
+// Example usage:
+//
+//	// List all drives
+//	drives := driveutil.ListDrives()
+//	for _, drive := range drives {
+//		fmt.Printf("Drive: %s, Label: %s, Serial: %08X\n", 
+//			drive.Letter, drive.Label, drive.Serial)
+//	}
+//
+//	// Monitor for new drives
+//	store := make(driveutil.DriveStore)
+//	store.DetectDrives(func(drive string, serial uint32) {
+//		fmt.Printf("New drive detected: %s (Serial: %08X)\n", drive, serial)
+//	})
 package driveutil
 
 import (
