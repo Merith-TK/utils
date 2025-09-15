@@ -5,6 +5,7 @@ Simple dev container setup for Go development using the official Microsoft Go de
 ## Features
 
 - **Go 1.23**: Latest stable Go version with all standard tools
+- **Mage**: Build automation tool (automatically installed)
 - **Docker-in-Docker**: For containerized development workflows
 - **golang.go**: Official Go VS Code extension with default settings
 
@@ -16,7 +17,29 @@ The dev container uses the official `mcr.microsoft.com/devcontainers/go:1.23` im
 - Node.js and npm for web development
 - Default Go development environment
 
+On container creation, mage is automatically installed for build automation.
+
 ### Building the Project
+
+Using Mage (recommended):
+```bash
+# Build all commands (default target)
+mage
+
+# Or explicitly
+mage build
+
+# Install all commands to $GOPATH/bin
+mage install
+
+# Clean build artifacts
+mage clean
+
+# Show available targets
+mage help
+```
+
+Using Go directly:
 ```bash
 # Download dependencies
 go mod download
@@ -29,9 +52,6 @@ go build -o bin/sys-info ./cmd/sys-info
 
 # Run tests
 go test ./...
-
-# Run with mage (if available)
-mage build
 ```
 
 ### Go Tools

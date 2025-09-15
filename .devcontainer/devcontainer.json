@@ -12,5 +12,7 @@
 				"golang.go"
 			]
 		}
-	}
+	},
+
+	"postCreateCommand": "go install github.com/magefile/mage@latest"
 }
